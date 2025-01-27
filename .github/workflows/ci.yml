@@ -17,28 +17,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Descargar el código fuente del repositorio
-      - uses: actions/checkout@v4
+      - name: Clonar el repositorio
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       # Configuración de Node.js y caché de dependencias
-      - uses: actions/setup-node@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
       # Instalación de dependencias del proyecto
-      - run: npm ci --legacy-peer-deps
+      - name: Instalar dependencias
+        run: npm ci --legacy-peer-deps
 
-      # Instalación de Cypress si se usa en el proyecto
-      - run: npx cypress install
 
       # Configuración de SHAs para Nx
-      - uses: nrwl/nx-set-shas@v4
+      - name: Configurar SHAs para Nx
+        uses: nrwl/nx-set-shas@v4
 
-      # Ejecución de Nx Cloud (descomenta para habilitar distribución)
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # Analizar las tareas afectadas
+      - name: Analizar tareas afectadas
+        run: npx nx affected:graph --head=HEAD --base=main
 
-      # Ejecutar las tareas afectadas (lint, test, build, e2e)
-      #- run: npx nx affected -t lint test build e2e
-      - run: npx nx affected -t lint build
+      # Ejecución de Nx Cloud (habilitar agentes distribuidos si es necesario)
+      - name: Iniciar Nx Cloud
+        run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+
+      # Ejecutar las tareas afectadas (lint, build, test, e2e)
+      - name: Ejecutar tareas afectadas
+        run: npx nx affected -t lint build
