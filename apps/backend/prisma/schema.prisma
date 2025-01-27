@@ -6,3 +6,21 @@ datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
+
+type QuizAnswers {
+  isCorrect Boolean
+  text      String
+}
+
+model quiz {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  answers   QuizAnswers[]
+  category  String
+  createdAt String
+  gameName  String
+  lore      String
+  question  String
+  saga      String
+  source    String
+  updatedAt String
+}
