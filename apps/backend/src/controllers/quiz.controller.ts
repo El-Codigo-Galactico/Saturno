@@ -3,7 +3,7 @@ import { QuizService } from '@/services/quiz.service';
 import { IQuiz } from '@/models/quiz.model';
 
 // Tipos personalizados para el request
-interface CreateQuizRequest extends Request {
+export interface CreateQuizRequest extends Request {
   body: Pick<
     IQuiz,
     | 'answers'
@@ -16,241 +16,159 @@ interface CreateQuizRequest extends Request {
   >;
 }
 
-interface UpdateQuizRequest extends Request {
+export interface UpdateQuizRequest extends Request {
   body: Partial<IQuiz>;
   params: {
     id: string;
   };
 }
 
-/**
- * Controlador para manejar las operaciones CRUD de Quizzes
- */
+export class QuizController {
+  private quizService: QuizService;
 
-/**
- * Obtiene todos los quizzes ordenados por fecha de creación
- * @param req Request de Express
- * @param res Response de Express
- */
-export const getQuizzes = async (
-  _req: Request,
-  res: Response
-): Promise<void> => {
-  try {
-    const quizzes = await QuizService.getAllQuizzes();
-
-    // Ordenar quizzes por fecha de creación (más reciente primero)
-    const sortedQuizzes = quizzes.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-
-    res.status(200).json(sortedQuizzes);
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Error desconocido';
-    res.status(500).json({
-      success: false,
-      message: 'Error al obtener los quizzes',
-      error: errorMessage,
-    });
+  constructor() {
+    this.quizService = new QuizService();
   }
-};
 
-/**
- * Obtiene un quiz específico por su ID
- * @param req Request de Express con el ID del quiz
- * @param res Response de Express
- */
-export const getQuizById = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  try {
+  async getAllQuizzes(_req: Request, res: Response) {
+    try {
+      const quizzes = await this.quizService.getAllQuizzes();
+
+      const sortedQuizzes = quizzes.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      return res.status(200).json({
+        success: true,
+        data: sortedQuizzes,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      return res.status(500).json({
+        success: false,
+        error: `Error al obtener los quizzes: ${errorMessage}`,
+      });
+    }
+  }
+
+  async getQuizById(req: Request, res: Response) {
     const { id } = req.params;
+    try {
+      if (!id?.trim()) {
+        return res.status(400).json({
+          success: false,
+          error: 'El ID del quiz es requerido',
+        });
+      }
 
-    if (!id?.trim()) {
-      res.status(400).json({
-        success: false,
-        message: 'El ID del quiz es requerido',
+      const quiz = await this.quizService.getQuizById(id);
+
+      if (!quiz) {
+        return res.status(404).json({
+          success: false,
+          error: 'Quiz no encontrado',
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: quiz,
       });
-      return;
-    }
-
-    const quiz = await QuizService.getQuizById(id);
-
-    if (!quiz) {
-      res.status(404).json({
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      return res.status(500).json({
         success: false,
-        message: `No se encontró el quiz con ID: ${id}`,
+        error: `Error al obtener el quiz: ${errorMessage}`,
       });
-      return;
     }
-
-    res.status(200).json({
-      success: true,
-      data: quiz,
-    });
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Error desconocido';
-    res.status(500).json({
-      success: false,
-      message: 'Error al obtener el quiz',
-      error: errorMessage,
-    });
   }
-};
 
-/**
- * Crea un nuevo quiz
- * @param req Request de Express con los datos del quiz
- * @param res Response de Express
- */
-export const createQuiz = async (
-  req: CreateQuizRequest,
-  res: Response
-): Promise<void> => {
-  try {
-    const { answers, category, gameName, lore, question, saga, source } =
-      req.body;
+  async createQuiz(req: CreateQuizRequest, res: Response) {
+    try {
+      if (!req.body || Object.keys(req.body).length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Se requieren datos para crear el quiz',
+        });
+      }
 
-    // Validación de campos requeridos
-    const requiredFields = {
-      answers,
-      category,
-      gameName,
-      lore,
-      question,
-      saga,
-      source,
-    };
-    const missingFields = Object.entries(requiredFields)
-      .filter(([, value]) => !value)
-      .map(([key]) => key);
+      const newQuiz = await this.quizService.createQuiz(req.body);
 
-    if (missingFields.length > 0) {
-      res.status(400).json({
-        success: false,
-        message: 'Campos requeridos faltantes',
-        missingFields,
+      return res.status(201).json({
+        success: true,
+        data: newQuiz,
       });
-      return;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      return res.status(500).json({
+        success: false,
+        error: `Error al crear el quiz: ${errorMessage}`,
+      });
     }
-
-    const newQuiz = await QuizService.createQuiz(req.body);
-
-    res.status(201).json({
-      success: true,
-      message: 'Quiz creado exitosamente',
-      data: newQuiz,
-    });
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Error desconocido';
-    res.status(500).json({
-      success: false,
-      message: 'Error al crear el quiz',
-      error: errorMessage,
-    });
   }
-};
 
-/**
- * Actualiza un quiz existente
- * @param req Request de Express con el ID y datos del quiz
- * @param res Response de Express
- */
-export const updateQuiz = async (
-  req: UpdateQuizRequest,
-  res: Response
-): Promise<void> => {
-  try {
+  async updateQuiz(req: UpdateQuizRequest, res: Response) {
     const { id } = req.params;
+    try {
+      if (!id?.trim()) {
+        return res.status(400).json({
+          success: false,
+          error: 'El ID del quiz es requerido',
+        });
+      }
 
-    if (!id?.trim()) {
-      res.status(400).json({
-        success: false,
-        message: 'El ID del quiz es requerido',
+      const updatedQuiz = await this.quizService.updateQuiz(id, req.body);
+
+      if (!updatedQuiz) {
+        return res.status(404).json({
+          success: false,
+          error: 'Quiz no encontrado',
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: updatedQuiz,
       });
-      return;
-    }
-
-    if (Object.keys(req.body).length === 0) {
-      res.status(400).json({
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      return res.status(500).json({
         success: false,
-        message: 'No se proporcionaron datos para actualizar',
+        error: `Error al actualizar el quiz: ${errorMessage}`,
       });
-      return;
     }
-
-    const updatedQuiz = await QuizService.updateQuiz(id, req.body);
-
-    if (!updatedQuiz) {
-      res.status(404).json({
-        success: false,
-        message: `No se encontró el quiz con ID: ${id}`,
-      });
-      return;
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Quiz actualizado exitosamente',
-      data: updatedQuiz,
-    });
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Error desconocido';
-    res.status(500).json({
-      success: false,
-      message: 'Error al actualizar el quiz',
-      error: errorMessage,
-    });
   }
-};
 
-/**
- * Elimina un quiz existente
- * @param req Request de Express con el ID del quiz
- * @param res Response de Express
- */
-export const deleteQuiz = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  try {
+  async deleteQuiz(req: Request, res: Response) {
     const { id } = req.params;
+    try {
+      if (!id?.trim()) {
+        return res.status(400).json({
+          success: false,
+          error: 'El ID del quiz es requerido',
+        });
+      }
 
-    if (!id?.trim()) {
-      res.status(400).json({
-        success: false,
-        message: 'El ID del quiz es requerido',
+      const deletedQuiz = await this.quizService.deleteQuiz(id);
+
+      if (!deletedQuiz) {
+        return res.status(404).json({
+          success: false,
+          error: 'Quiz no encontrado',
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: deletedQuiz,
       });
-      return;
-    }
-
-    const deletedQuiz = await QuizService.deleteQuiz(id);
-
-    if (!deletedQuiz) {
-      res.status(404).json({
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      return res.status(500).json({
         success: false,
-        message: `No se encontró el quiz con ID: ${id}`,
+        error: `Error al eliminar el quiz: ${errorMessage}`,
       });
-      return;
     }
-
-    res.status(200).json({
-      success: true,
-      message: 'Quiz eliminado exitosamente',
-    });
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Error desconocido';
-    res.status(500).json({
-      success: false,
-      message: 'Error al eliminar el quiz',
-      error: errorMessage,
-    });
   }
-};
+}

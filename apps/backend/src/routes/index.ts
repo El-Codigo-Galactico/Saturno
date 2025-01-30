@@ -4,6 +4,6 @@ import quizRoutes from './quiz.routes';
 const router = Router();
 
 // Definir todas las rutas aquí
-router.use('/quizs', quizRoutes);
+router.use('/quizzes', quizRoutes);
 
 export default router;

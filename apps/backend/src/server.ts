@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
 import routes from '@/routes';
+import { setupSwagger } from './config/swagger.config';
 
 // Cargar variables de entorno al inicio
 dotenv.config();
@@ -43,15 +44,18 @@ function getServerConfig(): ServerConfig {
     host: process.env.HOST ?? 'localhost',
     port: process.env.PORT ? Number(process.env.PORT) : 3000,
     mongoUri: process.env.MONGO_URI ?? '',
-    corsOrigins: process.env.CORS_ORIGINS ? 
-      process.env.CORS_ORIGINS.split(',') : 
-      ['http://localhost:3000'],
-    environment: process.env.NODE_ENV ?? 'development'
+    corsOrigins: process.env.CORS_ORIGINS
+      ? process.env.CORS_ORIGINS.split(',')
+      : ['http://localhost:3000'],
+    environment: process.env.NODE_ENV ?? 'development',
   };
 
   // Validación de configuraciones críticas
   if (!config.mongoUri) {
-    throw new AppError(500, '❌ MongoDB URI is not defined in the environment variables');
+    throw new AppError(
+      500,
+      '❌ MongoDB URI is not defined in the environment variables'
+    );
   }
 
   if (isNaN(config.port) || config.port <= 0) {
@@ -64,21 +68,28 @@ function getServerConfig(): ServerConfig {
 /**
  * Configura los middlewares de la aplicación
  */
-function setupMiddlewares(app: express.Application, config: ServerConfig): void {
+function setupMiddlewares(
+  app: express.Application,
+  config: ServerConfig
+): void {
   // Seguridad
-  app.use(helmet({
-    contentSecurityPolicy: config.environment === 'production',
-    crossOriginEmbedderPolicy: config.environment === 'production',
-  }));
-  
+  app.use(
+    helmet({
+      contentSecurityPolicy: config.environment === 'production',
+      crossOriginEmbedderPolicy: config.environment === 'production',
+    })
+  );
+
   // CORS
-  app.use(cors({
-    origin: config.corsOrigins,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-    maxAge: 86400 // 24 horas
-  }));
+  app.use(
+    cors({
+      origin: config.corsOrigins,
+      methods: ['GET', 'POST', 'PUT', 'DELETE'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true,
+      maxAge: 86400, // 24 horas
+    })
+  );
 
   // Parseo de body y logging
   app.use(express.json({ limit: '10mb' }));
@@ -106,7 +117,8 @@ async function connectToMongoDB(uri: string): Promise<void> {
     });
     console.log('✅ Connected to MongoDB');
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     throw new AppError(500, `❌ Error connecting to MongoDB: ${errorMessage}`);
   }
 }
@@ -114,18 +126,23 @@ async function connectToMongoDB(uri: string): Promise<void> {
 /**
  * Manejador global de errores
  */
-function errorHandler(err: Error, req: Request, res: Response, next: NextFunction): void {
+function errorHandler(
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
   console.error('🔥 Error:', {
     name: err.name,
     message: err.message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
   });
 
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
       status: err.status,
       message: err.message,
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
     });
     return;
   }
@@ -134,7 +151,7 @@ function errorHandler(err: Error, req: Request, res: Response, next: NextFunctio
   res.status(500).json({
     status: 'error',
     message: 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 }
 
@@ -142,7 +159,7 @@ async function startServer(): Promise<void> {
   try {
     // Obtener configuración
     const config = getServerConfig();
-    
+
     // Crear aplicación Express
     const app = express();
 
@@ -152,6 +169,9 @@ async function startServer(): Promise<void> {
     // Conectar a MongoDB
     await connectToMongoDB(config.mongoUri);
 
+    // Configurar Swagger
+    setupSwagger(app);
+
     // Rutas de la API
     app.use('/api', routes);
 
@@ -160,7 +180,7 @@ async function startServer(): Promise<void> {
       res.status(200).json({
         status: 'success',
         message: 'Server is healthy',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     });
 
@@ -168,7 +188,7 @@ async function startServer(): Promise<void> {
     app.use('*', (req: Request, res: Response) => {
       res.status(404).json({
         status: 'error',
-        message: `Route ${req.originalUrl} not found`
+        message: `Route ${req.originalUrl} not found`,
       });
     });
 
@@ -178,11 +198,12 @@ async function startServer(): Promise<void> {
     // Iniciar servidor
     app.listen(config.port, config.host, () => {
       console.log(`
-🚀 Server is running!
-📝 Mode: ${config.environment}
-🌐 Address: http://${config.host}:${config.port}
-🔑 API: http://${config.host}:${config.port}/api
-❤️  Health: http://${config.host}:${config.port}/health
+      🚀 Server is running!
+      📝 Mode: ${config.environment}
+      🌐 Address: http://${config.host}:${config.port}
+      🔑 API: http://${config.host}:${config.port}/api
+      📚 Docs: http://${config.host}:${config.port}/api/docs
+      ❤️ Health: http://${config.host}:${config.port}/health
       `);
     });
 
@@ -191,7 +212,6 @@ async function startServer(): Promise<void> {
       console.log('👋 SIGTERM received. Graceful shutdown started');
       process.exit(0);
     });
-
   } catch (error) {
     console.error('💥 Fatal error:', error);
     process.exit(1);

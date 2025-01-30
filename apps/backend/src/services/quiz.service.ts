@@ -9,7 +9,7 @@ export class QuizService {
    * @returns Promise<IQuiz[]> Lista de quizzes
    * @throws {Error} Si hay un error al recuperar los quizzes
    */
-  static async getAllQuizzes(): Promise<IQuiz[]> {
+  async getAllQuizzes(): Promise<IQuiz[]> {
     try {
       const quizzes = await Quiz.find().exec();
       return quizzes;
@@ -26,7 +26,7 @@ export class QuizService {
    * @returns Promise<IQuiz | null> Quiz encontrado o null si no existe
    * @throws {Error} Si hay un error al recuperar el quiz o el ID es inválido
    */
-  static async getQuizById(id: string): Promise<IQuiz | null> {
+  async getQuizById(id: string): Promise<IQuiz | null> {
     if (!id?.trim()) {
       throw new Error('El ID del quiz es requerido');
     }
@@ -45,17 +45,17 @@ export class QuizService {
 
   /**
    * Crea un nuevo quiz
-   * @param data Datos del quiz a crear
+   * @param quizData Datos del quiz a crear
    * @returns Promise<IQuiz> Quiz creado
-   * @throws {Error} Si hay un error al crear el quiz o los datos son inválidos
+   * @throws {Error} Si hay un error al crear el quiz
    */
-  static async createQuiz(data: Partial<IQuiz>): Promise<IQuiz> {
-    if (!data || Object.keys(data).length === 0) {
+  async createQuiz(quizData: Partial<IQuiz>): Promise<IQuiz> {
+    if (!quizData || Object.keys(quizData).length === 0) {
       throw new Error('Se requieren datos para crear el quiz');
     }
 
     try {
-      const newQuiz = new Quiz(data);
+      const newQuiz = new Quiz(quizData);
       const validationError = newQuiz.validateSync();
       if (validationError) {
         throw new Error(`Error de validación: ${validationError.message}`);
@@ -73,26 +73,23 @@ export class QuizService {
   /**
    * Actualiza un quiz existente
    * @param id ID del quiz a actualizar
-   * @param data Datos a actualizar
+   * @param updateData Datos a actualizar del quiz
    * @returns Promise<IQuiz | null> Quiz actualizado o null si no existe
-   * @throws {Error} Si hay un error al actualizar el quiz o los datos son inválidos
+   * @throws {Error} Si hay un error al actualizar el quiz
    */
-  static async updateQuiz(
-    id: string,
-    data: Partial<IQuiz>
-  ): Promise<IQuiz | null> {
+  async updateQuiz(id: string, updateData: Partial<IQuiz>): Promise<IQuiz | null> {
     if (!id?.trim()) {
       throw new Error('El ID del quiz es requerido');
     }
 
-    if (!data || Object.keys(data).length === 0) {
+    if (!updateData || Object.keys(updateData).length === 0) {
       throw new Error('Se requieren datos para actualizar el quiz');
     }
 
     try {
       const updatedQuiz = await Quiz.findByIdAndUpdate(
         id,
-        { $set: data },
+        { $set: updateData },
         { new: true, runValidators: true }
       ).exec();
 
@@ -114,9 +111,9 @@ export class QuizService {
    * Elimina un quiz existente
    * @param id ID del quiz a eliminar
    * @returns Promise<IQuiz | null> Quiz eliminado o null si no existe
-   * @throws {Error} Si hay un error al eliminar el quiz o el ID es inválido
+   * @throws {Error} Si hay un error al eliminar el quiz
    */
-  static async deleteQuiz(id: string): Promise<IQuiz | null> {
+  async deleteQuiz(id: string): Promise<IQuiz | null> {
     if (!id?.trim()) {
       throw new Error('El ID del quiz es requerido');
     }
