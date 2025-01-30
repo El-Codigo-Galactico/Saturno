@@ -5,7 +5,7 @@
   "scripts": {},
   "private": true,
   "engines": {
-    "node": "18.20.4"
+    "node": "22.13.1"
   },
   "dependencies": {
     "@angular/animations": "~19.0.0",
@@ -16,6 +16,7 @@
     "@angular/platform-browser": "~19.0.0",
     "@angular/platform-browser-dynamic": "~19.0.0",
     "@angular/router": "~19.0.0",
+    "@nestjs/swagger": "^11.0.3",
     "axios": "^1.6.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -24,6 +25,7 @@
     "mongoose": "^7.4.2",
     "morgan": "^1.10.0",
     "rxjs": "~7.8.0",
+    "swagger-ui-express": "^5.0.1",
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
