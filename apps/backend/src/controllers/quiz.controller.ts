@@ -1,23 +1,14 @@
 import { Request, Response } from 'express';
 import { QuizService } from '@/services/quiz.service';
-import { IQuiz } from '@/models/quiz.model';
+import { CreateQuizDto, UpdateQuizDto, QuizDto } from '@/dtos/quiz.dto';
 
 // Tipos personalizados para el request
 export interface CreateQuizRequest extends Request {
-  body: Pick<
-    IQuiz,
-    | 'answers'
-    | 'category'
-    | 'gameName'
-    | 'lore'
-    | 'question'
-    | 'saga'
-    | 'source'
-  >;
+  body: CreateQuizDto;
 }
 
 export interface UpdateQuizRequest extends Request {
-  body: Partial<IQuiz>;
+  body: UpdateQuizDto;
   params: {
     id: string;
   };
@@ -30,38 +21,31 @@ export class QuizController {
     this.quizService = new QuizService();
   }
 
-  async getAllQuizzes(_req: Request, res: Response) {
+  async getAllQuizzes(
+    _req: Request,
+    res: Response<{ success: boolean; data?: QuizDto[]; error?: string }>
+  ) {
     try {
       const quizzes = await this.quizService.getAllQuizzes();
-
-      const sortedQuizzes = quizzes.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
-        data: sortedQuizzes,
+        data: quizzes,
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      return res.status(500).json({
+      console.error('Error al obtener los quizzes:', error);
+      res.status(500).json({
         success: false,
-        error: `Error al obtener los quizzes: ${errorMessage}`,
+        error: 'Error al obtener los quizzes',
       });
     }
   }
 
-  async getQuizById(req: Request, res: Response) {
+  async getQuizById(
+    req: Request,
+    res: Response<{ success: boolean; data?: QuizDto; error?: string }>
+  ) {
     const { id } = req.params;
     try {
-      if (!id?.trim()) {
-        return res.status(400).json({
-          success: false,
-          error: 'El ID del quiz es requerido',
-        });
-      }
-
       const quiz = await this.quizService.getQuizById(id);
 
       if (!quiz) {
@@ -71,50 +55,64 @@ export class QuizController {
         });
       }
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         data: quiz,
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      return res.status(500).json({
+      console.error('Error al obtener el quiz:', error);
+      if (
+        error instanceof Error &&
+        error.message.includes('Cast to ObjectId failed')
+      ) {
+        return res.status(400).json({
+          success: false,
+          error: 'ID de quiz inválido',
+        });
+      }
+      res.status(500).json({
         success: false,
-        error: `Error al obtener el quiz: ${errorMessage}`,
+        error: 'Error al obtener el quiz',
       });
     }
   }
 
-  async createQuiz(req: CreateQuizRequest, res: Response) {
+  async createQuiz(
+    req: CreateQuizRequest,
+    res: Response<{ success: boolean; data?: QuizDto; error?: string }>
+  ) {
     try {
       if (!req.body || Object.keys(req.body).length === 0) {
         return res.status(400).json({
           success: false,
-          error: 'Se requieren datos para crear el quiz',
+          error: 'No se proporcionaron datos para crear el quiz',
         });
       }
 
-      const newQuiz = await this.quizService.createQuiz(req.body);
-
-      return res.status(201).json({
+      const quiz = await this.quizService.createQuiz(req.body);
+      res.status(201).json({
         success: true,
-        data: newQuiz,
+        data: quiz,
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      return res.status(500).json({
+      console.error('Error al crear el quiz:', error);
+      res.status(500).json({
         success: false,
-        error: `Error al crear el quiz: ${errorMessage}`,
+        error: 'Error al crear el quiz',
       });
     }
   }
 
-  async updateQuiz(req: UpdateQuizRequest, res: Response) {
+  async updateQuiz(
+    req: UpdateQuizRequest,
+    res: Response<{ success: boolean; data?: QuizDto; error?: string }>
+  ) {
     const { id } = req.params;
     try {
-      if (!id?.trim()) {
+      if (!req.body || Object.keys(req.body).length === 0) {
         return res.status(400).json({
           success: false,
-          error: 'El ID del quiz es requerido',
+          error: 'No se proporcionaron datos para actualizar',
         });
       }
 
@@ -127,29 +125,34 @@ export class QuizController {
         });
       }
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         data: updatedQuiz,
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      return res.status(500).json({
+      console.error('Error al actualizar el quiz:', error);
+      if (
+        error instanceof Error &&
+        error.message.includes('Cast to ObjectId failed')
+      ) {
+        return res.status(400).json({
+          success: false,
+          error: 'ID de quiz inválido',
+        });
+      }
+      res.status(500).json({
         success: false,
-        error: `Error al actualizar el quiz: ${errorMessage}`,
+        error: 'Error al actualizar el quiz',
       });
     }
   }
 
-  async deleteQuiz(req: Request, res: Response) {
+  async deleteQuiz(
+    req: Request,
+    res: Response<{ success: boolean; data?: QuizDto; error?: string }>
+  ) {
     const { id } = req.params;
     try {
-      if (!id?.trim()) {
-        return res.status(400).json({
-          success: false,
-          error: 'El ID del quiz es requerido',
-        });
-      }
-
       const deletedQuiz = await this.quizService.deleteQuiz(id);
 
       if (!deletedQuiz) {
@@ -159,15 +162,24 @@ export class QuizController {
         });
       }
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         data: deletedQuiz,
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      return res.status(500).json({
+      console.error('Error al eliminar el quiz:', error);
+      if (
+        error instanceof Error &&
+        error.message.includes('Cast to ObjectId failed')
+      ) {
+        return res.status(400).json({
+          success: false,
+          error: 'ID de quiz inválido',
+        });
+      }
+      res.status(500).json({
         success: false,
-        error: `Error al eliminar el quiz: ${errorMessage}`,
+        error: 'Error al eliminar el quiz',
       });
     }
   }

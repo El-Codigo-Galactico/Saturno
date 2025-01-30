@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/backend/src",
   "projectType": "application",
-  "tags": ["scope:backend", "type:api"],
+  "tags": [],
   "targets": {
     "build": {
       "executor": "@nx/esbuild:esbuild",
@@ -13,51 +13,26 @@
         "platform": "node",
         "outputPath": "dist/apps/backend",
         "format": ["cjs"],
-        "bundle": true,
+        "bundle": false,
         "main": "apps/backend/src/server.ts",
         "tsConfig": "apps/backend/tsconfig.app.json",
-        "assets": [
-          "apps/backend/src/assets",
-          {
-            "glob": ".env",
-            "input": ".",
-            "output": "."
-          },
-          {
-            "glob": "package.json",
-            "input": ".",
-            "output": "."
-          }
-        ],
+        "assets": ["apps/backend/src/assets"],
         "generatePackageJson": true,
         "esbuildOptions": {
           "sourcemap": true,
           "outExtension": {
             ".js": ".js"
-          },
-          "minify": false,
-          "target": "node18"
+          }
         }
       },
       "configurations": {
-        "development": {
-          "bundle": false,
-          "esbuildOptions": {
-            "sourcemap": true,
-            "outExtension": {
-              ".js": ".js"
-            }
-          }
-        },
+        "development": {},
         "production": {
-          "bundle": true,
           "esbuildOptions": {
             "sourcemap": false,
             "outExtension": {
               ".js": ".js"
-            },
-            "minify": true,
-            "target": "node18"
+            }
           }
         }
       }
@@ -68,48 +43,21 @@
       "dependsOn": ["build"],
       "options": {
         "buildTarget": "backend:build",
-        "watch": true,
-        "port": 3000,
         "runBuildTargetDependencies": false
       },
       "configurations": {
         "development": {
-          "buildTarget": "backend:build:development",
-          "inspect": true
+          "buildTarget": "backend:build:development"
         },
         "production": {
           "buildTarget": "backend:build:production"
         }
       }
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["apps/backend/**/*.ts"]
-      }
-    },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "apps/backend/jest.config.ts",
         "passWithNoTests": true
-      },
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true
-        }
       }
-    },
-    "docker-build": {
-      "dependsOn": ["build"],
-      "command": "docker build -f apps/backend/Dockerfile . -t backend:latest"
-    },
-    "deploy": {
-      "dependsOn": ["build", "test"],
-      "command": "node dist/apps/backend/server.js"
     }
   }
 }
