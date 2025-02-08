@@ -2,80 +2,113 @@
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
+✨ Bienvenido a tu workspace de [Nx](https://nx.dev) ✨
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+Este workspace está configurado para manejar tanto el frontend como el backend de la aplicación. Usa los siguientes comandos para administrar cada uno de los servicios.
 
-## Finish your CI setup
+## Estructura del Proyecto
 
-[Click here to finish setting up your workspace!](https://cloud.nx.app/connect/hckg8tGxq5)
+Este monorepo de Nx contiene los siguientes proyectos:
 
-## Run tasks
+- **Frontend**: Aplicación web desarrollada con `React/Angular/Vue`.
+- **Backend**: API desarrollada con `NestJS/Express/Fastify`.
 
-To run the dev server for your app, use:
+## Configuración Inicial
+
+Asegúrate de instalar todas las dependencias antes de ejecutar cualquier servicio:
+
+```sh
+npm install
+```
+
+## Ejecución del Proyecto
+
+Para iniciar el frontend en modo desarrollo:
 
 ```sh
 npx nx serve frontend
 ```
 
-To create a production bundle:
+Para iniciar el backend en modo desarrollo:
+
+```sh
+npx nx serve backend
+```
+
+Para compilar el frontend para producción:
 
 ```sh
 npx nx build frontend
 ```
 
-To see all available targets to run for a project, run:
+Para compilar el backend para producción:
+
+```sh
+npx nx build backend
+```
+
+## Comandos Útiles
+
+Para listar los proyectos disponibles:
+
+```sh
+npx nx show projects
+```
+
+Para ver todas las tareas disponibles para un proyecto:
 
 ```sh
 npx nx show project frontend
+npx nx show project backend
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+## Generación de Código
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Puedes generar nuevas aplicaciones y bibliotecas dentro del monorepo utilizando Nx.
 
-## Add new projects
-
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-Use the plugin's generator to create new projects.
-
-To generate a new application, use:
+Para crear una nueva aplicación:
 
 ```sh
-npx nx g @nx/angular:app demo
+npx nx g @nx/react:app new-app
 ```
 
-To generate a new library, use:
+Para crear una nueva librería compartida:
 
 ```sh
-npx nx g @nx/angular:lib mylib
+npx nx g @nx/js:lib shared-lib
 ```
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+Puedes ver los plugins instalados con:
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+```sh
+npx nx list
+```
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Y obtener detalles sobre un plugin en particular con:
 
-## Install Nx Console
+```sh
+npx nx list <plugin-name>
+```
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+## Configuración de CI/CD
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Puedes configurar Nx Cloud para optimizar la ejecución de comandos y compartir caché entre equipos:
 
-## Useful links
+[Conectar con Nx Cloud](https://cloud.nx.app/connect/hckg8tGxq5)
 
-Learn more:
+También puedes revisar la documentación sobre Nx en CI/CD:
 
-- [Learn more about this workspace setup](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+[Configuración de Nx en CI](https://nx.dev/ci/intro/ci-with-nx)
 
-And join the Nx community:
+## Instalación de Nx Console
 
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Nx Console es una extensión para editores como VSCode e IntelliJ que facilita la gestión del monorepo.
+
+[Instalar Nx Console](https://nx.dev/getting-started/editor-setup)
+
+## Recursos Adicionales
+
+- [Documentación Oficial de Nx](https://nx.dev)
+- [Comunidad en Discord](https://go.nx.dev/community)
+- [Canal de YouTube de Nx](https://www.youtube.com/@nxdevtools)
+- [Blog Oficial de Nx](https://nx.dev/blog)
