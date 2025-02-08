@@ -20,6 +20,22 @@ export class QuizService {
     }
   }
 
+    /**
+     * Obtiene todas las categorías disponibles
+     * @returns Promise<string[]> Lista de categorías
+     * @throws {Error} Si hay un error al recuperar las categorías
+     */
+    async getAllCategories(): Promise<string[]> {
+      try {
+        const categories = await Quiz.distinct('category').exec();
+        return categories;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Error desconocido';
+        throw new Error(`Error al recuperar las categorías: ${errorMessage}`);
+      }
+    }
+
   /**
    * Obtiene un quiz específico por su ID
    * @param id ID del quiz a buscar
@@ -113,13 +129,16 @@ export class QuizService {
    * @returns Promise<IQuiz | null> Quiz eliminado o null si no existe
    * @throws {Error} Si hay un error al eliminar el quiz
    */
+  /*
+  TODO: Implementar el metodo para baja logica
+  */
   async deleteQuiz(id: string): Promise<IQuiz | null> {
     if (!id?.trim()) {
       throw new Error('El ID del quiz es requerido');
     }
 
     try {
-      const deletedQuiz = await Quiz.findByIdAndDelete(id).exec();
+      const deletedQuiz = await Quiz.findByIdAndRemove(id).exec();
 
       if (!deletedQuiz) {
         throw new Error(`No se encontró el quiz con ID ${id}`);
